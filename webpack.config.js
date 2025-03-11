@@ -1,14 +1,12 @@
-const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const webpack = require('webpack');
-require('dotenv').config(); // Load .env file
+const ModuleFederationPlugin = webpack.container.ModuleFederationPlugin;
 
 module.exports = {
     entry: "./src/index.tsx",
     output: {
-        filename: "bundle.js",
-        path: path.resolve(__dirname, "dist"),
+        publicPath: "http://localhost:3001/",
     },
     resolve: {
         extensions: [".tsx", ".ts", ".js"],
@@ -27,14 +25,20 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: "./public/index.html",
         }),
-        new webpack.DefinePlugin({
-            'process.env': JSON.stringify(process.env),
+        new ModuleFederationPlugin({
+            name: "remoteApp",
+            filename: "remoteEntry.js",
+            exposes: {
+                "./Button": "./src/components/Button", // Expose component
+            },
+            shared: {
+                react: { singleton: true, },
+                "react-dom": { singleton: true, },
+            },
         }),
     ],
     devServer: {
-        port: 3000,
-        hot: true,         // Enables Hot Module Replacement (HMR)
-        open: true,        // Opens the app in the browser automatically
-        historyApiFallback: true, // Enables support for React Router
+        port: 3001,
+        hot: true,
     },
 };
